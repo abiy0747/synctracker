@@ -16,7 +16,7 @@ app.use(morgan("dev"));
 app.get("/api/health", (_req, res) => {
   res.json({
     success: true,
-    message: "SyncTracker API is running 🚀",
+    message: " API is running 🚀",
   });
 });
 
