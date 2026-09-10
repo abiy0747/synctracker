@@ -235,3 +235,46 @@ export const getProjectMembers = async (
 
   return members;
 };
+
+export const removeProjectMember = async (
+  projectId: number,
+  userId: number,
+  memberUserId: number
+) => {
+  // Check that the requesting user belongs to the project
+  const projectMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!projectMember) {
+    return null;
+  }
+
+  // Find the member we want to remove
+  const memberToRemove = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId: memberUserId,
+        projectId,
+      },
+    },
+  });
+
+  if (!memberToRemove) {
+    return null;
+  }
+
+  // Remove the membership
+  const removedMember = await prisma.projectMember.delete({
+    where: {
+      id: memberToRemove.id,
+    },
+  });
+
+  return removedMember;
+};

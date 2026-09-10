@@ -8,6 +8,7 @@ import {
   deleteProject,
   addProjectMember,
   getProjectMembers,
+  removeProjectMember,
 } from "../services/project.service";
 
 export const create = async (req: AuthRequest, res: Response) => {
@@ -325,6 +326,55 @@ export const getMembers = async (
     return res.status(200).json({
       success: true,
       members,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const removeMember = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const projectId = Number(req.params.id);
+    const memberUserId = Number(req.params.userId);
+
+    if (isNaN(projectId) || isNaN(memberUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid project ID or user ID",
+      });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User is not authenticated",
+      });
+    }
+
+    const removedMember = await removeProjectMember(
+      projectId,
+      req.userId,
+      memberUserId
+    );
+
+    if (!removedMember) {
+      return res.status(404).json({
+        success: false,
+        message: "Project or member not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Project member removed successfully",
     });
   } catch (error) {
     console.error(error);

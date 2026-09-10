@@ -7,6 +7,7 @@ import {
   remove,
   addMember,
   getMembers,
+  removeMember,
 } from "../controllers/project.controller";
 import { authenticate } from "../middleware/auth.middleware";
 
@@ -19,4 +20,5 @@ router.put("/:id", authenticate, update);
 router.delete("/:id", authenticate, remove);
 router.post("/:id/members", authenticate, addMember);
 router.get("/:id/members", authenticate, getMembers);
+router.delete("/:id/members/:userId", authenticate, removeMember);
 export default router;
