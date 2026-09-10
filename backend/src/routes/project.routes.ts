@@ -6,6 +6,7 @@ import {
   update,
   remove,
   addMember,
+  updateMember,
   getMembers,
   removeMember,
 } from "../controllers/project.controller";
@@ -19,6 +20,7 @@ router.get("/:id", authenticate, getProject);
 router.put("/:id", authenticate, update);
 router.delete("/:id", authenticate, remove);
 router.post("/:id/members", authenticate, addMember);
+router.patch("/:id/members/:memberId", authenticate, updateMember);
 router.get("/:id/members", authenticate, getMembers);
 router.delete("/:id/members/:userId", authenticate, removeMember);
 export default router;

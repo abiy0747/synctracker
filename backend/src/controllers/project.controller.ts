@@ -7,6 +7,7 @@ import {
   updateProject,
   deleteProject,
   addProjectMember,
+  updateProjectMember,
   getProjectMembers,
   removeProjectMember,
 } from "../services/project.service";
@@ -335,6 +336,91 @@ export const addMember = async (
   }
 };
 
+
+export const updateMember = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const projectId = Number(req.params.id);
+    const memberId = Number(req.params.memberId);
+
+    if (isNaN(projectId) || isNaN(memberId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid project ID or member ID",
+      });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User is not authenticated",
+      });
+    }
+
+    const {
+      role,
+      responsibility,
+      status,
+      parentMemberId,
+    } = req.body;
+
+    let parsedParentMemberId:
+      | number
+      | null
+      | undefined;
+
+    if (parentMemberId === undefined) {
+      parsedParentMemberId = undefined;
+    } else if (
+      parentMemberId === null ||
+      parentMemberId === ""
+    ) {
+      parsedParentMemberId = null;
+    } else {
+      parsedParentMemberId = Number(parentMemberId);
+
+      if (isNaN(parsedParentMemberId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid parent member ID",
+        });
+      }
+    }
+
+    const member = await updateProjectMember(
+      projectId,
+      req.userId,
+      memberId,
+      role,
+      responsibility,
+      status,
+      parsedParentMemberId
+    );
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Project or project member not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Project member updated successfully",
+      member,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 export const getMembers = async (
   req: AuthRequest,

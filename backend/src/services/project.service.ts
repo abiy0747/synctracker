@@ -248,6 +248,120 @@ export const addProjectMember = async (
 };
 
 
+export const updateProjectMember = async (
+  projectId: number,
+  userId: number,
+  memberId: number,
+  role: string | undefined,
+  responsibility: string | undefined,
+  status: string | undefined,
+  parentMemberId: number | null | undefined
+) => {
+  // Check that the requesting user belongs to the project
+  const requestingMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!requestingMember) {
+    return null;
+  }
+
+  // Find the member we want to update
+  const memberToUpdate = await prisma.projectMember.findFirst({
+    where: {
+      id: memberId,
+      projectId,
+    },
+  });
+
+  if (!memberToUpdate) {
+    return null;
+  }
+
+  // If a parent member is provided,
+  // make sure that parent belongs to this project
+  if (parentMemberId !== undefined && parentMemberId !== null) {
+    // A member cannot be their own parent
+    if (parentMemberId === memberId) {
+      return null;
+    }
+
+    const parentMember = await prisma.projectMember.findFirst({
+      where: {
+        id: parentMemberId,
+        projectId,
+      },
+    });
+
+    if (!parentMember) {
+      return null;
+    }
+  }
+
+  const updatedMember = await prisma.projectMember.update({
+    where: {
+      id: memberId,
+    },
+    data: {
+      ...(role !== undefined && {
+        role,
+      }),
+
+      ...(responsibility !== undefined && {
+        responsibility,
+      }),
+
+      ...(status !== undefined && {
+        status,
+      }),
+
+      ...(parentMemberId !== undefined && {
+        parentMemberId,
+      }),
+
+      lastUpdateAt: new Date(),
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+
+      parentMember: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+
+      assignedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return updatedMember;
+};
+
+
+
 export const getProjectMembers = async (
   projectId: number,
   userId: number
