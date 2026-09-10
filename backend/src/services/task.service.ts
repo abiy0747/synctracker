@@ -85,3 +85,33 @@ export const getMyTasks = async (userId: number) => {
 
   return tasks;
 };
+
+export const getTaskById = async (
+  taskId: number,
+  userId: number
+) => {
+  const task = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      project: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+    },
+    include: {
+      project: true,
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return task;
+};
