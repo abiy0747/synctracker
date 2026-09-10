@@ -14,8 +14,9 @@ model User {
   password  String
   createdAt DateTime @default(now())
 
-  projects  ProjectMember[]
-  assignedTasks Task[]
+  projects             ProjectMember[] @relation("ProjectMemberUser")
+  assignedTasks        Task[]
+  assignedProjectMembers ProjectMember[] @relation("MemberAssignments")
 }
 
 model Project {
@@ -29,13 +30,22 @@ model Project {
 }
 
 model ProjectMember {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  projectId Int
-  joinedAt  DateTime @default(now())
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  projectId        Int
+  role             String   @default("MEMBER")
+  responsibility   String?
+  status           String   @default("IN_SYNC")
+  parentMemberId   Int?
+  assignedById     Int?
+  lastUpdateAt     DateTime @default(now())
+  joinedAt         DateTime @default(now())
 
-  user       User    @relation(fields: [userId], references: [id])
-  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user             User          @relation("ProjectMemberUser", fields: [userId], references: [id])
+  project          Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentMember     ProjectMember? @relation("MemberHierarchy", fields: [parentMemberId], references: [id])
+  childMembers     ProjectMember[] @relation("MemberHierarchy")
+  assignedBy       User?         @relation("MemberAssignments", fields: [assignedById], references: [id])
 
   @@unique([userId, projectId])
 }

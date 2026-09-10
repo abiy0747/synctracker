@@ -138,11 +138,17 @@ export const deleteProject = async (
   return project;
 };
 
+
 export const addProjectMember = async (
   projectId: number,
   userId: number,
-  memberUserId: number
+  memberUserId: number,
+  role: string,
+  responsibility: string | undefined,
+  parentMemberId: number | undefined
 ) => {
+  // Check that the person assigning the member
+  // is already a member of the project
   const projectMember = await prisma.projectMember.findUnique({
     where: {
       userId_projectId: {
@@ -156,6 +162,7 @@ export const addProjectMember = async (
     return null;
   }
 
+  // Check that the user we want to add actually exists
   const user = await prisma.user.findUnique({
     where: {
       id: memberUserId,
@@ -166,6 +173,7 @@ export const addProjectMember = async (
     return null;
   }
 
+  // Check whether the user is already a member
   const existingMember = await prisma.projectMember.findUnique({
     where: {
       userId_projectId: {
@@ -179,13 +187,54 @@ export const addProjectMember = async (
     return null;
   }
 
+  // If a parent member was provided,
+  // make sure that parent member belongs to this project
+  if (parentMemberId !== undefined) {
+    const parentMember = await prisma.projectMember.findFirst({
+      where: {
+        id: parentMemberId,
+        projectId,
+      },
+    });
+
+    if (!parentMember) {
+      return null;
+    }
+  }
+
+  // Create the new project member
   const newMember = await prisma.projectMember.create({
     data: {
       userId: memberUserId,
       projectId,
+      role,
+      responsibility,
+      parentMemberId,
+
+      // The authenticated user is automatically recorded
+      // as the person who assigned this member
+      assignedById: userId,
     },
     include: {
       user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      parentMember: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+      assignedBy: {
         select: {
           id: true,
           name: true,
@@ -197,6 +246,7 @@ export const addProjectMember = async (
 
   return newMember;
 };
+
 
 export const getProjectMembers = async (
   projectId: number,

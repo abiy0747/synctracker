@@ -231,6 +231,7 @@ export const remove = async (
   }
 };
 
+
 export const addMember = async (
   req: AuthRequest,
   res: Response
@@ -252,8 +253,14 @@ export const addMember = async (
       });
     }
 
-    const { memberUserId } = req.body;
+    const {
+      memberUserId,
+      role,
+      responsibility,
+      parentMemberId,
+    } = req.body;
 
+    // Validate member user ID
     if (!memberUserId) {
       return res.status(400).json({
         success: false,
@@ -261,17 +268,55 @@ export const addMember = async (
       });
     }
 
+    // Validate role
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: "Member role is required",
+      });
+    }
+
+    // Convert IDs to numbers
+    const parsedMemberUserId = Number(memberUserId);
+
+    const parsedParentMemberId =
+      parentMemberId !== undefined &&
+      parentMemberId !== null &&
+      parentMemberId !== ""
+        ? Number(parentMemberId)
+        : undefined;
+
+    if (isNaN(parsedMemberUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid member user ID",
+      });
+    }
+
+    if (
+      parsedParentMemberId !== undefined &&
+      isNaN(parsedParentMemberId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid parent member ID",
+      });
+    }
+
     const member = await addProjectMember(
       projectId,
       req.userId,
-      Number(memberUserId)
+      parsedMemberUserId,
+      role,
+      responsibility,
+      parsedParentMemberId
     );
 
     if (!member) {
       return res.status(404).json({
         success: false,
         message:
-          "Project not found, user not found, or user is already a member",
+          "Project not found, user not found, user is already a member, or parent member is invalid",
       });
     }
 
@@ -289,6 +334,7 @@ export const addMember = async (
     });
   }
 };
+
 
 export const getMembers = async (
   req: AuthRequest,
