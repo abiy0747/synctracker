@@ -1,0 +1,139 @@
+import prisma from "../config/prisma";
+
+export const createProject = async (
+  name: string,
+  description: string | undefined,
+  userId: number
+) => {
+  const project = await prisma.project.create({
+    data: {
+      name,
+      description,
+      members: {
+        create: {
+          userId,
+        },
+      },
+    },
+    include: {
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return project;
+};
+
+export const getMyProjects = async (userId: number) => {
+  const projects = await prisma.projectMember.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      project: true,
+    },
+  });
+
+  return projects;
+};
+
+export const getProjectById = async (
+  projectId: number,
+  userId: number
+) => {
+  const projectMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+    include: {
+      project: {
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          tasks: true,
+        },
+      },
+    },
+  });
+
+  return projectMember?.project ?? null;
+};
+
+export const updateProject = async (
+  projectId: number,
+  userId: number,
+  name: string,
+  description: string | undefined
+) => {
+  const projectMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!projectMember) {
+    return null;
+  }
+
+  const project = await prisma.project.update({
+    where: {
+      id: projectId,
+    },
+    data: {
+      name,
+      description,
+    },
+  });
+
+  return project;
+};
+
+export const deleteProject = async (
+  projectId: number,
+  userId: number
+) => {
+  const projectMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!projectMember) {
+    return null;
+  }
+
+  const project = await prisma.project.delete({
+    where: {
+      id: projectId,
+    },
+  });
+
+  return project;
+};
