@@ -115,3 +115,68 @@ export const getTaskById = async (
 
   return task;
 };
+
+export const updateTask = async (
+  taskId: number,
+  userId: number,
+  title: string,
+  description: string | undefined,
+  status: string,
+  priority: string,
+  assigneeId: number
+) => {
+  const task = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      project: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+    },
+  });
+
+  if (!task) {
+    return null;
+  }
+
+  const assigneeMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId: assigneeId,
+        projectId: task.projectId,
+      },
+    },
+  });
+
+  if (!assigneeMember) {
+    return null;
+  }
+
+  const updatedTask = await prisma.task.update({
+    where: {
+      id: taskId,
+    },
+    data: {
+      title,
+      description,
+      status,
+      priority,
+      assigneeId,
+    },
+    include: {
+      project: true,
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return updatedTask;
+};
