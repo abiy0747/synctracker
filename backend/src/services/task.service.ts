@@ -56,3 +56,32 @@ const task = await prisma.task.create({
 
   return task;
 };
+
+export const getMyTasks = async (userId: number) => {
+  const tasks = await prisma.task.findMany({
+    where: {
+      project: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+    },
+    include: {
+      project: true,
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return tasks;
+};

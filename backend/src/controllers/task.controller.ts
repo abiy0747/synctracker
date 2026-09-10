@@ -1,6 +1,9 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
-import { createTask } from "../services/task.service";
+import {
+  createTask,
+  getMyTasks,
+} from "../services/task.service";
 
 export const create = async (
   req: AuthRequest,
@@ -49,6 +52,34 @@ export const create = async (
       success: true,
       message: "Task created successfully",
       task,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getTasks = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User is not authenticated",
+      });
+    }
+
+    const tasks = await getMyTasks(req.userId);
+
+    return res.status(200).json({
+      success: true,
+      tasks,
     });
   } catch (error) {
     console.error(error);
