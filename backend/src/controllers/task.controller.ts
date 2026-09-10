@@ -5,6 +5,7 @@ import {
   getMyTasks,
   getTaskById,
   updateTask,
+  deleteTask,
 } from "../services/task.service";
 
 export const create = async (
@@ -199,6 +200,53 @@ export const update = async (
       success: true,
       message: "Task updated successfully",
       task: updatedTask,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const remove = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const taskId = Number(req.params.id);
+
+    if (isNaN(taskId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid task ID",
+      });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User is not authenticated",
+      });
+    }
+
+    const task = await deleteTask(
+      taskId,
+      req.userId
+    );
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Task deleted successfully",
     });
   } catch (error) {
     console.error(error);
