@@ -197,3 +197,41 @@ export const addProjectMember = async (
 
   return newMember;
 };
+
+export const getProjectMembers = async (
+  projectId: number,
+  userId: number
+) => {
+  const projectMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!projectMember) {
+    return null;
+  }
+
+  const members = await prisma.projectMember.findMany({
+    where: {
+      projectId,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: {
+      joinedAt: "asc",
+    },
+  });
+
+  return members;
+};

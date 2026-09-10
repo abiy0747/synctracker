@@ -7,6 +7,7 @@ import {
   updateProject,
   deleteProject,
   addProjectMember,
+  getProjectMembers,
 } from "../services/project.service";
 
 export const create = async (req: AuthRequest, res: Response) => {
@@ -277,6 +278,53 @@ export const addMember = async (
       success: true,
       message: "Project member added successfully",
       member,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getMembers = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const projectId = Number(req.params.id);
+
+    if (isNaN(projectId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid project ID",
+      });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User is not authenticated",
+      });
+    }
+
+    const members = await getProjectMembers(
+      projectId,
+      req.userId
+    );
+
+    if (!members) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      members,
     });
   } catch (error) {
     console.error(error);

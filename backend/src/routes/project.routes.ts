@@ -6,6 +6,7 @@ import {
   update,
   remove,
   addMember,
+  getMembers,
 } from "../controllers/project.controller";
 import { authenticate } from "../middleware/auth.middleware";
 
@@ -17,4 +18,5 @@ router.get("/:id", authenticate, getProject);
 router.put("/:id", authenticate, update);
 router.delete("/:id", authenticate, remove);
 router.post("/:id/members", authenticate, addMember);
+router.get("/:id/members", authenticate, getMembers);
 export default router;
