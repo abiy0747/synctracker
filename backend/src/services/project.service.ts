@@ -137,3 +137,63 @@ export const deleteProject = async (
 
   return project;
 };
+
+export const addProjectMember = async (
+  projectId: number,
+  userId: number,
+  memberUserId: number
+) => {
+  const projectMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!projectMember) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: memberUserId,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  const existingMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId: memberUserId,
+        projectId,
+      },
+    },
+  });
+
+  if (existingMember) {
+    return null;
+  }
+
+  const newMember = await prisma.projectMember.create({
+    data: {
+      userId: memberUserId,
+      projectId,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return newMember;
+};
