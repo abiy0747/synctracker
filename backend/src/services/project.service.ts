@@ -366,6 +366,7 @@ export const getProjectMembers = async (
   projectId: number,
   userId: number
 ) => {
+  // Check that the requesting user belongs to the project
   const projectMember = await prisma.projectMember.findUnique({
     where: {
       userId_projectId: {
@@ -384,6 +385,7 @@ export const getProjectMembers = async (
       projectId,
     },
     include: {
+      // The actual user represented by this project member
       user: {
         select: {
           id: true,
@@ -391,7 +393,46 @@ export const getProjectMembers = async (
           email: true,
         },
       },
+
+      // The member this person reports/works under
+      parentMember: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+
+      // People directly below this member in the responsibility tree
+      childMembers: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          joinedAt: "asc",
+        },
+      },
+
+      // Who assigned this member to the project
+      assignedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
+
     orderBy: {
       joinedAt: "asc",
     },
