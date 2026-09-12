@@ -11,6 +11,10 @@ import {
   getProjectMembers,
   removeProjectMember,
 } from "../services/project.service";
+import {
+  PROJECT_MEMBER_ROLES,
+  PROJECT_MEMBER_STATUSES,
+} from "../constants/project.constants";
 
 export const create = async (req: AuthRequest, res: Response) => {
   try {
@@ -277,6 +281,14 @@ export const addMember = async (
       });
     }
 
+    if (!PROJECT_MEMBER_ROLES.includes(role)) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid member role",
+    allowedRoles: PROJECT_MEMBER_ROLES,
+  });
+}
+
     // Convert IDs to numbers
     const parsedMemberUserId = Number(memberUserId);
 
@@ -366,6 +378,27 @@ export const updateMember = async (
       parentMemberId,
     } = req.body;
 
+
+   if (role !== undefined && !PROJECT_MEMBER_ROLES.includes(role)) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid member role",
+    allowedRoles: PROJECT_MEMBER_ROLES,
+  });
+}
+
+if (
+  status !== undefined &&
+  !PROJECT_MEMBER_STATUSES.includes(status)
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid member status",
+    allowedStatuses: PROJECT_MEMBER_STATUSES,
+  });
+}
+
+  
     let parsedParentMemberId:
       | number
       | null
