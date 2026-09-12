@@ -9,12 +9,16 @@ export const createProject = async (
     data: {
       name,
       description,
+
       members: {
         create: {
           userId,
+          role: "OWNER",
+          status: "IN_SYNC",
         },
       },
     },
+
     include: {
       members: {
         include: {
